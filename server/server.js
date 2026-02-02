@@ -13,6 +13,20 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 app.use(cors());
 app.use(express.json());
 
+// Подаём статические файлы фронтенда
+const path = require('path');
+const clientDistPath = path.join(__dirname, '../client/dist');
+app.use(express.static(clientDistPath));
+
+// SPA fallback - все неизвестные маршруты ведут на index.html
+app.get('*', (req, res, next) => {
+  // Пропускаем API маршруты
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+  res.sendFile(path.join(clientDistPath, 'index.html'));
+});
+
 // Инициализация базы данных
 const db = new sqlite3.Database('./barber.db', (err) => {
   if (err) {
