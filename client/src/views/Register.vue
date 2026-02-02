@@ -1,0 +1,312 @@
+<template>
+  <div class="auth-page">
+    <div class="auth-background"></div>
+    
+    <div class="auth-container fade-in">
+      <div class="auth-card glass-card">
+        <h1 class="auth-title">PAHAN BARBER</h1>
+        <p class="auth-subtitle">Регистрация</p>
+
+        <form @submit.prevent="handleRegister" class="auth-form">
+          <div class="form-group">
+            <input 
+              v-model="form.firstName" 
+              type="text" 
+              placeholder="Имя" 
+              required
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <input 
+              v-model="form.lastName" 
+              type="text" 
+              placeholder="Фамилия" 
+              required
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <input 
+              v-model="form.phone" 
+              type="tel" 
+              placeholder="Телефон (+7...)" 
+              required
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <input 
+              v-model="form.email" 
+              type="email" 
+              placeholder="Email" 
+              required
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <input 
+              v-model="form.password" 
+              type="password" 
+              placeholder="Пароль" 
+              required
+              minlength="6"
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="avatar-label">Выберите аватар:</label>
+            <div class="emoji-picker">
+              <div 
+                v-for="emoji in emojis" 
+                :key="emoji"
+                class="emoji-option"
+                :class="{ selected: form.avatar === emoji }"
+                @click="form.avatar = emoji"
+              >
+                {{ emoji }}
+              </div>
+            </div>
+          </div>
+
+          <div v-if="error" class="error-message">{{ error }}</div>
+
+          <button 
+            type="submit" 
+            class="btn-primary"
+            :disabled="loading"
+          >
+            {{ loading ? 'Регистрация...' : 'Зарегистрироваться' }}
+          </button>
+
+          <p class="auth-switch">
+            Уже есть аккаунт? 
+            <router-link to="/login">Войти</router-link>
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import api from '../services/api';
+
+export default {
+  name: 'Register',
+  data() {
+    return {
+      form: {
+        firstName: '',
+        lastName: '',
+        phone: '',
+        email: '',
+        password: '',
+        avatar: '😊'
+      },
+      emojis: ['😊', '😎', '🤠', '👨', '👨‍🦱', '👨‍🦰', '👨‍🦳', '🧔', '👔', '💼', '⚡', '🔥', '✨', '🎯', '🏆', '👑'],
+      loading: false,
+      error: ''
+    }
+  },
+  methods: {
+    async handleRegister() {
+      this.loading = true;
+      this.error = '';
+
+      try {
+        const response = await api.register(this.form);
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        this.$router.push('/home');
+      } catch (err) {
+        this.error = err.response?.data?.error || 'Ошибка регистрации';
+      } finally {
+        this.loading = false;
+      }
+    }
+  }
+}
+</script>
+
+<style scoped>
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 20px;
+}
+
+.auth-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    linear-gradient(135deg, rgba(10, 10, 10, 0.9) 0%, rgba(30, 30, 30, 0.8) 100%),
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23d4af37" opacity="0.03" width="100" height="100"/><circle cx="50" cy="50" r="40" fill="none" stroke="%23d4af37" stroke-width="0.5" opacity="0.1"/></svg>');
+  background-size: cover, 50px 50px;
+  z-index: -1;
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 500px;
+  z-index: 1;
+}
+
+.auth-card {
+  padding: 50px 40px;
+}
+
+.auth-title {
+  text-align: center;
+  font-size: 2.5rem;
+  color: var(--accent-gold);
+  margin-bottom: 10px;
+  letter-spacing: 4px;
+}
+
+.auth-subtitle {
+  text-align: center;
+  font-size: 1.3rem;
+  color: var(--text-secondary);
+  margin-bottom: 40px;
+  letter-spacing: 2px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.form-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 15px 20px;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.form-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.avatar-label {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  letter-spacing: 1px;
+}
+
+.emoji-picker {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 10px;
+}
+
+.emoji-option {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  border: 2px solid var(--border-subtle);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.emoji-option:hover {
+  border-color: var(--accent-gold);
+  transform: scale(1.1);
+}
+
+.emoji-option.selected {
+  border-color: var(--accent-gold);
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.error-message {
+  color: #ff6b6b;
+  text-align: center;
+  padding: 10px;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.btn-primary {
+  margin-top: 10px;
+  width: 100%;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-switch {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-top: 10px;
+}
+
+.auth-switch a {
+  color: var(--accent-gold);
+  text-decoration: none;
+  margin-left: 5px;
+  transition: color 0.3s ease;
+}
+
+.auth-switch a:hover {
+  color: var(--accent-light);
+}
+
+@media (max-width: 768px) {
+  .auth-card {
+    padding: 40px 25px;
+  }
+
+  .auth-title {
+    font-size: 2rem;
+  }
+
+  .auth-subtitle {
+    font-size: 1.1rem;
+  }
+
+  .emoji-picker {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .emoji-option {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+}
+</style>
